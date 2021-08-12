@@ -1,0 +1,6 @@
+
+#!/bin/bash
+
+source .env
+
+open "${web1_server}/videoroomtest.html?room=${room_id}"

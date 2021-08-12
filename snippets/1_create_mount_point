@@ -1,0 +1,30 @@
+#!/bin/bash
+
+source .env
+
+session_id=$(curl -X POST ${janus2_server} -d "{
+  \"janus\": \"create\",
+  \"transaction\": \"${transaction}\"}" 2>/dev/null  | awk -F ' ' '/\"id\"/ {print $2}');
+echo "Session id: $session_id";
+
+handle=$(curl -X POST ${janus2_server}/$session_id --data "{
+          \"transaction\": \"${transaction}\",
+          \"janus\": \"attach\",
+          \"plugin\": \"janus.plugin.streaming\"}" 2>&1| awk -F ' ' '/\"id\"/ {print $2}');
+echo "Handle received: $handle";
+
+curl -X POST ${janus2_server}/$session_id/$handle --data "{
+  \"transaction\": \"${transaction}\",
+  \"janus\": \"message\",
+  \"body\": {
+    \"request\": \"create\",
+    \"type\": \"rtp\",
+    \"audio\": true,
+    \"audioport\": ${audio_port},
+    \"audiopt\": ${audio_pt},
+    \"audiortpmap\": \"opus/48000/2\",
+    \"video\": true,
+    \"videoport\": ${video_port},
+    \"videopt\": ${video_pt},
+    \"videortpmap\":\"VP8/90000\",
+    \"description\": \"${transaction}\"}}"

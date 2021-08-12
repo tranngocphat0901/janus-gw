@@ -1,0 +1,34 @@
+version: '3.9' 
+services:
+  webserver:
+    container_name: janus2-webserver
+    build: ./src/webserver
+    volumes:
+      - ./src/webserver/html:/var/www/html
+    ports:
+      - "61:80"
+    networks:
+      - janus2_network
+  janus-gateway:
+    container_name: janus2-gateway
+    build: ./src/janus-gateway
+    # command: 
+    #   - /usr/local/bin/janus
+    #   - -F
+    #   - /usr/local/etc/janus
+    volumes:
+      - "./conf:/usr/local/etc/janus"
+    ports:
+      - "6188:8188"
+      - "6088:8088"
+      - "6089:8089"
+      - "6889:8889"
+      - "6000:8000"
+      - "5088:7088"
+      - "5089:7089"
+    networks:
+      - janus2_network
+networks:
+  janus2_network:
+    external:
+      name: janus_cluster_network
