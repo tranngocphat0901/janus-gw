@@ -1,0 +1,80 @@
+################################################################
+# Global configuration
+################################################################
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: true
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+# Enable API and dashboard
+#
+# Optional
+#
+api:
+  # Enable the API in insecure mode
+  #
+  # Optional
+  # Default: false
+  #
+  insecure: true
+
+  # Enabled Dashboard
+  #
+  # Optional
+  # Default: true
+  #
+#  dashboard: false
+
+################################################################
+# EntryPoints configuration
+################################################################
+
+# EntryPoints definition
+#
+# Optional
+#
+entryPoints:
+  web:
+    address: :80
+  websecure:
+    address: :443
+  janushttps:
+    address: :8089
+  janusws:
+    address: :8188
+
+################################################################
+# Traefik logs configuration
+################################################################
+log:
+  level: DEBUG
+  filePath: /traefik/log/debug.log
+  format: json
+
+################################################################
+# Access logs configuration
+################################################################
+accessLog:
+  filePath: /traefik/log/access.log
+  format: json
+
+################################################################
+# Docker configuration backend
+################################################################
+providers:
+  docker:
+    useBindPortIP: true
+    exposedByDefault: false
+
+################################################################
+# ACME configuration
+################################################################
+certificatesresolvers:
+  myresolver:
+    acme:
+      tlschallenge: true
+      email: ${EMAIL}
+      storage: /letsencrypt/acme.json

@@ -1,0 +1,75 @@
+version: '3.9' 
+services:
+  traefik:
+    image: "traefik:v2.5"
+    container_name: "traefik"
+    ports:
+      - "443:443"
+      - "8080:8080"
+      - "8089:8089"
+    networks:
+      - janus_network
+    volumes:
+      - "./traefik/log:/traefik/log"
+      - "./traefik/traefik.yml:/etc/traefik/traefik.yml"
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    networks:
+      - janus_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN}`)"
+      - 'traefik.http.routers.whoami.rule=PathPrefix(`/whoami{regex:$$|/.*}`)'
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+  webdemo:
+    image: nginx:latest
+    container_name: webdemo
+    volumes:
+      - ./src/nginx:/etc/nginx/conf.d
+      - ./src/janus-gateway/html:/var/www/html
+    networks:
+      - janus_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webdemo.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.webdemo.entrypoints=websecure"
+      - "traefik.http.routers.webdemo.tls.certresolver=myresolver"
+  janus-gateway:
+    container_name: janus-gateway
+    build: ./src/janus-gateway
+    command: 
+      - /usr/local/bin/janus
+      - -F
+      - /usr/local/etc/janus
+    volumes:
+      - ./conf:/usr/local/etc/janus
+    networks:
+      - janus_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8089"
+      - "traefik.http.routers.janus-gateway.rule=Host(`${DOMAIN}`)"
+      
+      - "traefik.http.routers.janus-gateway.entrypoints=janushttps"
+      - 'traefik.http.routers.janus-gateway.service=janushttps' 
+      - "traefik.http.services.janushttps.loadbalancer.server.port=8088"
+      
+      #- "traefik.http.routers.janus-gateway.entrypoints=janusws"
+      #- 'traefik.http.routers.janus-gateway.service=janusws' 
+      #- "traefik.http.services.janusws.loadbalancer.server.port=8188"
+      
+      - "traefik.http.routers.janus-gateway.middlewares=janusheader@docker"
+      - "traefik.http.middlewares.janusheader.headers.accesscontrolallowheaders=DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type"
+      - "traefik.http.middlewares.janusheader.headers.accesscontrolallowmethods=GET,POST,OPTIONS"
+      - "traefik.http.middlewares.janusheader.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.janusheader.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.janusheader.headers.addvaryheader=true"
+
+      - "traefik.http.routers.janus-gateway.tls.certresolver=myresolver"
+networks:
+  janus_network:
+    name: "${JANUS_CLUSTER_NETWORK}"

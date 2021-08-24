@@ -1,0 +1,75 @@
+- hosts: janus
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: true
+  
+  tasks:
+  - name: Update all packages
+    apt:
+      update_cache: yes
+      upgrade: dist
+  
+  # reinstal docker
+  - name: Install prerequisites for Docker repository
+    apt:
+      name: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg2', 'software-properties-common', 'ebtables', 'ethtool']
+      update_cache: yes
+  
+  - name: Add Docker GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+
+  - name: Add Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/{{ ansible_system | lower }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+
+  - name: Install Docker CE
+    apt:
+      name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
+      update_cache: yes
+
+  - name: Creates /etc/docker
+    file:
+      path: /etc/docker
+      state: directory
+
+  - name: Write daemon.json
+    copy: 
+      content: '{{ { 
+        "exec-opts": ["native.cgroupdriver=systemd"], 
+        "log-driver": "json-file", 
+        "log-opts": { 
+          "max-size": "100m" 
+        }, 
+        "storage-driver": "overlay2" } | to_nice_json }}'
+      dest: /etc/docker/daemon.json
+  
+  - name: Enable service docker
+    ansible.builtin.systemd:
+      name: docker
+      state: started
+  
+  - name: Just force systemd to reread configs (2.4 and above)
+    systemd: daemon_reload=yes
+  
+  - name: Restart service docker
+    ansible.builtin.systemd:
+      name: docker
+      state: restarted
+  
+  - name: Add remote "ubuntu" user to "docker" group
+    remote_user: ubuntu
+    user:
+      name: "ubuntu"
+      group: "docker"
+      append: yes
+    tags:
+      - docker
+
+  - name: Install docker-compose
+    remote_user: ubuntu
+    get_url: 
+      url :  https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+      dest: /usr/local/bin/docker-compose
+      mode: 'u+x,g+x'

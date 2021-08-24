@@ -247,3 +247,8 @@ docker-compose -f janus1/docker-compose.yml down;
 docker-compose -f janus1/docker-compose.yml up -d;   
 docker-compose -f janus2/docker-compose.yml down;
 docker-compose -f janus2/docker-compose.yml up -d;
+
+
+
+
+docker run -d 44fdc7472f82 -p 8188:8188 -p 8088:8088 -p 8089:8089 -p 8889:8889 -p 8000:8000 -p 7088:7088 -p 7089:7089 

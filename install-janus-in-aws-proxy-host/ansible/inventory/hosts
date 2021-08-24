@@ -1,0 +1,5 @@
+[janus]
+todayly-dev-proxy ansible_host=3.20.96.77 ansible_user=ubuntu ansible_become=true email='vodongnhut@gmail.com' domain="doa.today.ly"
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

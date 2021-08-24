@@ -1,0 +1,6 @@
+
+#!/bin/bash
+
+source .env
+
+open "${web2_server}/streamingtest.html"

@@ -1,0 +1,13 @@
+- hosts: janus
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: true
+  vars:
+    rootdir: /root/janus
+    
+  tasks:
+    - name: docker-compose down
+      shell:
+        chdir: "{{rootdir}}"
+        cmd: docker-compose down

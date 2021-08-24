@@ -1,0 +1,32 @@
+- hosts: janus
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: true
+
+  vars_files:
+    - vars/vars.yml
+    
+  tasks:
+    - name: docker-compose up -d
+      shell:
+        chdir: "{{rootdir}}"
+        cmd: docker-compose up -d
+
+    - name: Pause for 1 minutes to docker-compose up
+      pause:
+        minutes: 2
+
+    - name: Disconnect {{janus_cluster_network}} janus-gateway
+      shell:
+        chdir: "{{rootdir}}"
+        cmd: docker network disconnect {{janus_cluster_network}} janus-gateway
+
+    - name: Pause for 10 seconds
+      pause:
+        seconds: 10
+    
+    - name: Reonnect {{janus_cluster_network}} janus-gateway
+      shell:
+        chdir: "{{rootdir}}"
+        cmd: docker network connect {{janus_cluster_network}} janus-gateway

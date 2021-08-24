@@ -1,0 +1,72 @@
+- hosts: janus
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: true
+  
+  vars_files:
+    - vars/vars.yml
+
+  tasks:
+    - name: Make "{{rootdir}}" dir 
+      file:
+        path: "{{rootdir}}"
+        state: directory
+        mode: '0755'
+    
+    - name: Make "{{rootdir}}/.env"
+      template:
+        src: env.j2
+        dest: "{{rootdir}}/.env"
+
+    - name: Make docker-compose.yml
+      template:
+        src: docker-compose.yml.j2
+        dest: "{{rootdir}}/docker-compose.yml"
+    
+    - name: Make "{{rootdir}}/traefik" dir 
+      file:
+        path: "{{rootdir}}/traefik"
+        state: directory
+        mode: '0755'
+        
+    - name: Make traefik.yml
+      template:
+        src: traefik.yml.j2
+        dest: "{{rootdir}}/traefik/traefik.yml"
+
+    - name: Pull "janus-gateway" from meetecho
+      git:
+        repo: https://github.com/meetecho/janus-gateway.git
+        dest: "{{rootdir}}/src/janus-gateway"
+        update: yes
+        version: master
+    
+    - name: Make "janus-gateway" Dockerfile
+      template:
+        src: janus-gateway-dockerfile.j2
+        dest: "{{rootdir}}/src/janus-gateway/Dockerfile"
+    
+    - name: Make "{{rootdir}}/conf" dir 
+      file:
+        path: "{{rootdir}}/conf"
+        state: directory
+        mode: '0755'
+        
+    - name: Make config/janus
+      template:
+        src: "{{item}}"
+        dest: /root/janus/conf/{{ item | basename | regex_replace('\.j2$', '') }}
+      with_fileglob:
+        - templates/janus/conf/*.j2
+    
+    - name: Make "{{rootdir}}/src/nginx" dir 
+      file:
+        path: "{{rootdir}}/src/nginx"
+        state: directory
+        mode: '0755'
+
+    - name: Make "nginx-demo.conf"
+      template:
+        src: nginx-webdemo.conf.j2
+        dest: "{{rootdir}}/src/nginx/default.conf"
