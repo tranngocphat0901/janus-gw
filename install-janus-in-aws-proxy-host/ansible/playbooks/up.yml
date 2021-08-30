@@ -13,7 +13,7 @@
         chdir: "{{rootdir}}"
         cmd: docker-compose up -d
 
-    - name: Pause for 1 minutes to docker-compose up
+    - name: Pause for 2 minutes to docker-compose up
       pause:
         minutes: 2
 

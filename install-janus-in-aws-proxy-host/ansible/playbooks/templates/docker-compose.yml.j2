@@ -4,6 +4,7 @@ services:
     image: "traefik:v2.5"
     container_name: "traefik"
     ports:
+      - "80:80"
       - "443:443"
       - "8080:8080"
       - "8089:8089"
@@ -40,6 +41,14 @@ services:
       - "traefik.http.routers.webdemo.tls.certresolver=myresolver"
   janus-gateway:
     container_name: janus-gateway
+    ports:
+      - "7088:7088"
+      - "7089:7089"
+      - "8000:8000"
+      - "8088:8088"
+      - "8188:8188"
+      - "8889:8889"
+      - "10000-10200:10000-10200/udp"
     build: ./src/janus-gateway
     command: 
       - /usr/local/bin/janus

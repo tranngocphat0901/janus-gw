@@ -1,0 +1,5 @@
+- import_playbook: docker-removing.yml
+- import_playbook: docker-installing.yml
+- import_playbook: janus-deploy.yml
+- import_playbook: up.yml
+- import_playbook: reboot.yml
